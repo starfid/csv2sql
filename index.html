@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>CSV to SQL</title>
+		<meta charset="utf-8">
+		<meta content="Page Description" name="description">
+		<meta content="notranslate" name="google">
+		<meta content="yes" name="mobile-web-app-capable">
+		<meta content="yes" name="apple-mobile-web-app-capable">
+		<meta content="width=device-width,none-scale=1,shrink-to-fit=no" name="viewport">
+		<meta content="#FFFFFF" name="theme-color">
+		<meta content="telephone=no" name="format-detection">
+		<link rel="icon" href="data:,">
+		<style>
+			body {margin:0;padding:1vw}
+			body,textarea,input {font-family:arial;font-size:1.1vw}
+			input[type='checkbox'], label, input[type='button'] {cursor:pointer}
+			textarea,input,fieldset {outline:0;}
+			#source {width:97.5vw;height:30vh}
+			textarea {margin:0;scrollbar-width:none;}
+			section {margin:2vw auto;display:inline-grid;grid-template-columns:auto auto;grid-gap:2vw;}
+			fieldset {padding:0;border:0;margin:0 0 2vw 0;display:inline-grid;grid-template-columns:auto auto;grid-gap:2vw;}
+			#colNames {height:45vh;overflow-x:hidden;overflow-y:scrollx}
+			#colNames div {padding:.2vw 0}
+			#sql {width:75vw;height:45vh;border:0}
+			@media (max-width: 1000px) { /*phone size below 1000 pixel*/
+				body,textarea,input {font-family:arial;font-size:2vh}
+				input[type='text'] {width:23vw}
+				input[type='button'] {width:19vw}
+			}
+		</style>
+	</head>
+	<body>
+		First row should contain column names.<br><br>
+		<textarea id="source" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="off" placeholder="Paste SQL here" autofocus></textarea>
+		<section>
+			<div>
+				<label>Table name</label> <input type="text" id="tbName" value="dummy">
+			</div>
+			<div>
+				<input type="button" value="Convert" onclick="convert(true)" >
+			</div>
+		</section><br>
+		<fieldset>
+			<div id="colNames"></div>
+			<textarea id="sql" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="off"></textarea>
+		</fieldset>
+			
+		
+	</body>
+</html>
+<script>
+	var initCols = []
+	var cols = [];
+	var removed = [];
+	var rowNumber = 0;
+	var firstRow = true;
+	var tbName = document.getElementById('tbName');
+	var section = document.getElementsByTagName('section')[0];
+	var tx = document.getElementsByTagName('textarea');
+	var colNames = document.getElementById('colNames');
+	var getCols = () => {
+		colNames.innerHTML = "";
+		colNames.style.cssText = "overflow-y:scroll;scrollbar-width:none;";
+		cols.forEach(col=>{
+			colNames.innerHTML = colNames.innerHTML + "<div><input onchange='change(this)' value='"+col+"' id='c+"+col+"' type='checkbox'checked> <label for='c+"+col+"'>" + col + '</label> &nbsp;</div>\n';
+			
+		});
+	}
+	var convert = (init) => {
+		var csv = tx[0];
+		var target = tx[1];
+		target.value = '';
+		var row = [...csv.value.split(/\r\n|\n|\r/)][0];
+		
+		if(csv.value.length>2 && csv.value.indexOf('","')>1) {
+			target.style.border = 'solid 1px black';
+			[...csv.value.split(/\r\n|\n|\r/)].forEach(row=>{
+				if(firstRow) {
+					firstRow = false;
+					[...row.substring(1, row.length-1).split('","')].forEach(col=>{
+						init && cols.push(col);
+						init && initCols.push(col);
+					});
+					init && getCols();
+				}
+				else {
+					var val = [];
+					[...row.substring(1, row.length-1).split('","')].forEach(col=>{
+						val.push(col);
+					});
+					if(removed.length==1){
+						console.log(removed);
+						val.splice(removed[0],1);
+					}
+					target.value = target.value + "insert into "+tbName.value+" ("+cols.join(', ')+") values('" + val.join("','") + "');\n\n";
+					rowNumber++;
+				}
+			});
+		}
+		target.scrollTop = csv.scrollTop = 0;
+		if(init) {
+			init = false;
+			section.innerHTML = rowNumber + ' rows';
+		}
+	}
+	var change = (obj) => {
+		cols = [];
+		cols = initCols;
+		var index = initCols.indexOf(obj.value)
+		removed.push(index);
+		cols.splice(index, 1);
+		getCols();
+		firstRow = true;
+		convert(false);
+		[...colNames.getElementsByTagName('input')].forEach(col=>{
+			col.disabled = true;
+		});
+	}
+</script>
