@@ -32,7 +32,7 @@
 	</head>
 	<body>
 		First row should contain column names.<br><br>
-		<textarea id="source" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="off" placeholder="Paste SQL here" autofocus></textarea>
+		<textarea id="source" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="off" placeholder="Paste CSV here" autofocus></textarea>
 		<section>
 			<div>
 				<label>Table name</label> <input type="text" id="tbName" value="dummy">
@@ -93,7 +93,7 @@
 						console.log(removed);
 						val.splice(removed[0],1);
 					}
-					target.value = target.value + "insert into "+tbName.value+" ("+cols.join(', ')+") values('" + val.join("','") + "');\n\n";
+					target.value = target.value + "insert into "+tbName.value+" ("+cols.join(', ')+") values(\"" + val.join("\",\"") + "\");\n\n";
 					rowNumber++;
 				}
 			});
